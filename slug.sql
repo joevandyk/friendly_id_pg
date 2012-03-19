@@ -1,6 +1,7 @@
---begin;
 
 create extension if not exists hstore;
+
+--begin;
 
 -- Test table
 drop table if exists foos;
@@ -32,6 +33,7 @@ declare
   new_slug_value text;
   already_exists integer;
   the_same boolean;
+  results foos%rowtype;
 begin
   slug_column := TG_ARGV[0];
 
@@ -44,18 +46,13 @@ begin
     end if;
   end if;
 
-
-  execute 'select coalesce(max(x), 0) from (select unnest(avals(slug_history)::integer[]) x from ' || tg_table_name || ' where search_slug_history($1, slug_history)) f'
+  execute 'select count(*) from (select unnest(avals(slug_history)::integer[]) x from ' || tg_table_name || ' where search_slug_history($1, slug_history)) f'
     into already_exists using new_slug_value;
 
-  raise notice 'exists: %', already_exists;
+  already_exists := already_exists + 1;
 
-  if already_exists then
-    new_slug_value := new_slug_value || '--' || already_exists + 1;
-  end if;
-
-  NEW.slug := new_slug_value;
-  NEW.slug_history := NEW.slug_history || ARRAY[NEW.slug, already_exists::text]::hstore;
+  NEW.slug := new_slug_value || '--' || already_exists;
+  NEW.slug_history := NEW.slug_history || ARRAY[new_slug_value, already_exists::text]::hstore;
 
   return NEW;
 end;
