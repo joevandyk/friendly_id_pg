@@ -1,0 +1,12 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    friendly_id (4.0.3)
+    pg (0.13.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  friendly_id
+  pg
